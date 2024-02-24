@@ -130,6 +130,8 @@ def move_door(desired_state):
 
     # Relay gets flipped here - motor turning
     print("Door is moving to state: %s" % desired_state)
+    print("Checking LS_door_closed_state == %i" % LS_door_closed_state)
+    print("Checking LS_door_open_sate == %i" % LS_door_open_state)
     if desired_state == "Open":
         print("Motor on: opening")
         time.sleep(5)
