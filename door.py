@@ -23,7 +23,9 @@ np = neopixel.NeoPixel(machine.Pin(neo_pin), num_pixels)
 # Limit_Switch_Open = Pin(Limit_Switch_Open_Pin, Pin.IN)
 Limit_Switch_Closed_Pin = 0
 Limit_Switch_Closed = Pin(Limit_Switch_Closed_Pin, Pin.IN, machine.Pin.PULL_UP)
-Limit_Switch_Open = False
+# Limit_Switch_Open = False
+Limit_Switch_Open_Pin = 1
+Limit_Switch_Open = Pin(Limit_Switch_Open_Pin, Pin.IN, machine.Pin.PULL_UP)
 
 # Motor assignments
 Relay_A_Pin = 14
@@ -70,11 +72,23 @@ client = MQTTClient("micropython_client", MQTT_BROKER, user=MQTT_USERNAME, passw
 def Door_Closed_Handler(self):
     global LS_door_closed_state
     LS_door_closed_state = 1
+    MotorOff()
     print("Door closed limit switch value is -- %i" % LS_door_closed_state)
     print("Door closed limit switch was triggered!")
+    
+#DoorOpen.py
+def Door_Open_Handler(self):
+    global LS_door_open_state
+    LS_door_open_state = 1
+    MotorOff()
+    print("Door open limit switch value is -- %i" % LS_door_open_state)
+    print("Door open limit switch was triggered!")
 
-# Create Closed Relay Handler
+# Create Closed Limit Switch Handler
 Limit_Switch_Closed.irq(trigger=machine.Pin.IRQ_FALLING, handler = Door_Closed_Handler)
+
+# Create Open Limit Switch Handler
+Limit_Switch_Open.irq(trigger=machine.Pin.IRQ_FALLING, handler = Door_Open_Handler)
 
 def MotorOff():
     Relay_A.value(0)
@@ -95,7 +109,7 @@ def on_message(topic, msg):
     if Limit_Switch_Closed.value() == False:
         print("Limit switches polled - door is currently Closed")
         current_door_state = "Closed"
-    elif Limit_Switch_Open == False:
+    elif Limit_Switch_Open.value() == False:
         current_door_state = "Open"
         print("Limit switches polled - door is currently Open")
     
@@ -104,7 +118,7 @@ def on_message(topic, msg):
         print("Door is already in desired state %s" % current_door_state)
         if current_door_state == "Closed":
             set_neopixel_color("red")
-        else:
+        elif current_door_state == "Open":
             set_neopixel_color("green")
     else:
         # Door is not in desired state, moving...
@@ -125,12 +139,11 @@ def move_door(desired_state):
         #Wait for door to finish
         try:
             while LS_door_open_state == 0:    
-                print("Waiting for interrupt request from door closed limit switch...")
+                print("Waiting for interrupt request from door open limit switch...")
                 time.sleep(3)
         except Exception as e:
+            MotorOff()
             print(e)
-            
-        MotorOff()
     elif desired_state == "Closed":
         print("Motor on: closing")
         time.sleep(5)
@@ -143,9 +156,8 @@ def move_door(desired_state):
                 print("Waiting for interrupt request from door closed limit switch...")
                 time.sleep(3)
         except Exception as e:
+            MotorOff()
             print(e)
-        
-        MotorOff()
     else:
         print("That's not a state newman.")
         MotorOff()
@@ -153,10 +165,12 @@ def move_door(desired_state):
         
     print("Door move complete! Door is now %s" % desired_state)
     if desired_state == "Open":
+        LS_door_closed_state = 0
         set_neopixel_color("blue")
         time.sleep(2)
         set_neopixel_color("green")
     else:
+        LS_door_open_state = 0
         set_neopixel_color("blue")
         time.sleep(2)
         set_neopixel_color("red")
