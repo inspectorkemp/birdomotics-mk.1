@@ -20,20 +20,20 @@ np = neopixel.NeoPixel(machine.Pin(neo_pin), num_pixels)
 
 # Define Relay configurations for limit switches
 # Relay_Open_Pin = 14
-# Limit_Switch_Open = Pin(Limit_Switch_Open_Pin, Pin.IN)
-Limit_Switch_Closed_Pin = 0
-Limit_Switch_Closed = Pin(Limit_Switch_Closed_Pin, Pin.IN, machine.Pin.PULL_UP)
-# Limit_Switch_Open = False
-Limit_Switch_Open_Pin = 1
-Limit_Switch_Open = Pin(Limit_Switch_Open_Pin, Pin.IN, machine.Pin.PULL_UP)
+# Sets closed limit switch pin to pin 0 and sets Limit_Switch_Closed to the value of the switch
+Limit_Switch_Closed_Pin = machine.Pin(0, machine.Pin.IN, machine.Pin.PULL_UP)
+Limit_Switch_Closed = Limit_Switch_Closed_Pin.value()
+# Sets open limit switch pin to pin 0 and sets Limit_Switch_Open to the value of the switch
+Limit_Switch_Open_Pin = machine.Pin(1, machine.Pin.IN, machine.Pin.PULL_UP)
+Limit_Switch_Open = Limit_Switch_Open_Pin.value()
 
 # Motor assignments
 Relay_A_Pin = 14
 Relay_B_Pin = 15
 # Relay_A = Door Closing
-Relay_A = Pin(Relay_A_Pin, Pin.OUT)
+Relay_A = machine.Pin(14, machine.Pin.OUT)
 # Relay_B = Door Opening
-Relay_B = Pin(Relay_B_Pin, Pin.OUT)
+Relay_B = machine.Pin(15, machine.Pin.OUT)
 
 
 # Function to set NeoPixel color
@@ -199,4 +199,3 @@ try:
         
 finally:
     client.disconnect()
-
