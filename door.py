@@ -36,18 +36,7 @@ Relay_A = machine.Pin(14, machine.Pin.OUT)
 Relay_B = machine.Pin(15, machine.Pin.OUT)
 
 
-# Function to set NeoPixel color
-def set_neopixel_color(color):
-    neopixel_red = ((255,0,0))
-    neopixel_green = ((0,255,0))
-    neopixel_blue = ((0,0,255))
-    if color == "red":
-        np[0] = neopixel_red
-    elif color == "green":
-        np[0] = neopixel_green
-    elif color == "blue":
-        np[0] = neopixel_blue
-    np.write()
+
 
 # Variables to track the current door state and desired door state
 current_door_state = ""
@@ -90,6 +79,20 @@ Limit_Switch_Closed.irq(trigger=machine.Pin.IRQ_FALLING, handler = Door_Closed_H
 # Create Open Limit Switch Handler
 Limit_Switch_Open.irq(trigger=machine.Pin.IRQ_FALLING, handler = Door_Open_Handler)
 
+
+# Function to set NeoPixel color
+def set_neopixel_color(color):
+    neopixel_red = ((255,0,0))
+    neopixel_green = ((0,255,0))
+    neopixel_blue = ((0,0,255))
+    if color == "red":
+        np[0] = neopixel_red
+    elif color == "green":
+        np[0] = neopixel_green
+    elif color == "blue":
+        np[0] = neopixel_blue
+    np.write()
+    
 def MotorOff():
     Relay_A.value(0)
     Relay_B.value(0)
@@ -106,10 +109,10 @@ def on_message(topic, msg):
     print("New Desired State Message Received %s" % new_desired_state)
     
     # Check limit switches for door state 
-    if Limit_Switch_Closed.value() == False:
+    if (Limit_Switch_Closed.value() == 1, Limit_Switch_Open.value() == 0):
         print("Limit switches polled - door is currently Closed")
         current_door_state = "Closed"
-    elif Limit_Switch_Open.value() == False:
+    elif (Limit_Switch_Open.value() == 1, Limit_Switch_Closed.value() == 0):
         current_door_state = "Open"
         print("Limit switches polled - door is currently Open")
     
