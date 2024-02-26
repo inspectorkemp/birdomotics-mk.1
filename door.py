@@ -151,7 +151,7 @@ def on_message(topic, msg):
     elif Limit_Switch_Closed.value() == 0 and Limit_Switch_Open.value() == 1:
         current_door_state = "Open"
         print("Limit switches polled - door is currently Open")
-    elif Limit_Switch_Closed.value() == 1 and Limit_Switch_Open.value() == 1:
+    elif Limit_Switch_Closed.value() == 0 and Limit_Switch_Open.value() == 0:
         current_door_state = "Unknown"
         print("Both limit switchs are open -- door in unknown state")
     elif Limit_Switch_Closed.value() == 1 and Limit_Switch_Open.value() == 1:
