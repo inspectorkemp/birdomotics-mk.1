@@ -12,3 +12,13 @@ Configure a way to query door position switches *only* via MQTT subscribe and th
 
 ## Requirements
 Create secrets.py, define secrets, then import: `import secrets`
+Insert the following into the secrets.py, supplying the values inside the double quotes:
+```
+# Define WiFi and MQTT details
+WIFI_SSID = ""
+WIFI_PASS = ""
+MQTT_BROKER = ""
+MQTT_USERNAME = ""
+MQTT_PASSWORD = ""
+MQTT_TOPIC_REQUEST = ""
+```
