@@ -145,15 +145,18 @@ def on_message(topic, msg):
     print("New Desired State Message Received %s" % new_desired_state)
     
     # Check limit switches for door state 
-    if Limit_Switch_Closed.value() == 0 and Limit_Switch_Open.value() == 1:
+    if Limit_Switch_Closed.value() == 1 and Limit_Switch_Open.value() == 0:
         print("Limit switches polled - door is currently Closed")
         current_door_state = "Closed"
-    elif Limit_Switch_Open.value() == 0 and Limit_Switch_Open.value() == 0:
+    elif Limit_Switch_Closed.value() == 0 and Limit_Switch_Open.value() == 1:
         current_door_state = "Open"
         print("Limit switches polled - door is currently Open")
-    elif Limit_Switch_Open.value() == 1 and Limit_Switch_Closed.value() == 1:
+    elif Limit_Switch_Closed.value() == 0 and Limit_Switch_Open.value() == 0:
         current_door_state = "Unknown"
         print("Both limit switchs are open -- door in unknown state")
+    elif Limit_Switch_Closed.value() == 1 and Limit_Switch_Open.value() == 1:
+        current_door_state = "Unknown"
+        print("Both limit switchs are closed -- door in unknown state")
     
     # Check if door is in the desired state already - if yes, don't do anything.
     if new_desired_state == current_door_state:
