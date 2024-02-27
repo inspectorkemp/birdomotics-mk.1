@@ -77,6 +77,7 @@ client = MQTTClient("micropython_client", MQTT_BROKER, user=MQTT_USERNAME, passw
 
 # DoorClosing.py
 def Door_Closed_Handler(pin):
+    print("Door closed pin %s" % pin)
     global LS_door_closed_state
     global LS_door_open_state
     # If the open limit switch is opened (in other words when the door is moving to closed state) the irq still has to be handled
@@ -101,6 +102,7 @@ def Door_Closed_Handler(pin):
     
 #DoorOpen.py
 def Door_Open_Handler(pin):
+    print("Door open pin %s" % pin)
     global LS_door_open_state
     global LS_door_closed_state
     # If the closed limit switch is opened (in other words when the door is moving to open state) the irq still has to be handled
@@ -145,10 +147,10 @@ def on_message(topic, msg):
     print("New Desired State Message Received %s" % new_desired_state)
     
     # Check limit switches for door state 
-    if Limit_Switch_Closed.value() == 1 and Limit_Switch_Open.value() == 0:
+    if Limit_Switch_Closed.value() == 0 and Limit_Switch_Open.value() == 1:
         print("Limit switches polled - door is currently Closed")
         current_door_state = "Closed"
-    elif Limit_Switch_Closed.value() == 0 and Limit_Switch_Open.value() == 1:
+    elif Limit_Switch_Closed.value() == 1 and Limit_Switch_Open.value() == 0:
         current_door_state = "Open"
         print("Limit switches polled - door is currently Open")
     elif Limit_Switch_Closed.value() == 0 and Limit_Switch_Open.value() == 0:
@@ -156,7 +158,7 @@ def on_message(topic, msg):
         print("Both limit switchs are open -- door in unknown state")
     elif Limit_Switch_Closed.value() == 1 and Limit_Switch_Open.value() == 1:
         current_door_state = "Unknown"
-        print("Both limit switchs are closed -- door in unknown state")
+        print("Both limit switchs are open -- door in unknown state")
     
     # Check if door is in the desired state already - if yes, don't do anything.
     if new_desired_state == current_door_state:
@@ -245,4 +247,5 @@ try:
         
 finally:
     client.disconnect()
+
 
