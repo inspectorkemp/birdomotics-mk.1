@@ -75,17 +75,16 @@ while not wifi.isconnected():
 # Initialize MQTT client
 client = MQTTClient("micropython_client", MQTT_BROKER, user=MQTT_USERNAME, password=MQTT_PASSWORD)
 
-# DoorClosing.py
-def Door_Closed_Handler(pin):
-    print("Door closed pin %s" % pin)
+def Get_Limit_Switch_Values():
     global LS_door_closed_state
     global LS_door_open_state
-    # If the open limit switch is opened (in other words when the door is moving to closed state) the irq still has to be handled
-    if (Limit_Switch_Open.value() == 1):
-        print("Door open switch is now open - skipping interrupt action.")
-        # Get current state of limit switches
-        # LS_door_closed_state = Limit_Switch_Closed.value()
-        # LS_door_open_state = Limit_Switch_Open.value()
+    LS_door_open_state = Limit_Switch_Open.value()
+    LS_door_closed_state = Limit_Switch_Closed.value()
+
+# DoorClosing.py
+def Door_Closed_Handler(pin):
+    global LS_door_closed_state
+    global LS_door_open_state
     # If the closed door limit switch is closed, then update the limit switch states and turn off the motor.
     if (Limit_Switch_Closed.value() == 0):
         # Turn off handler to prevent re-introduce multiple interrupts while running
@@ -102,15 +101,8 @@ def Door_Closed_Handler(pin):
     
 #DoorOpen.py
 def Door_Open_Handler(pin):
-    print("Door open pin %s" % pin)
     global LS_door_open_state
     global LS_door_closed_state
-    # If the closed limit switch is opened (in other words when the door is moving to open state) the irq still has to be handled
-    if (Limit_Switch_Closed.value() == 1):
-        print("Door closed switch is now open - skipping interrupt action.")
-        # Get current state of limit switches
-        LS_door_open_state = Limit_Switch_Open.value()
-        # LS_door_closed_state = Limit_Switch_Closed.value()
     # If the open door limit switch is closed, then update the limit switch states and turn off the motor.
     if (Limit_Switch_Open.value() == 0):
         # Turn off handler to prevent re-introduce multiple interrupts while running
@@ -123,12 +115,15 @@ def Door_Open_Handler(pin):
         # Turn the interrupt back on
         Limit_Switch_Open.irq(handler=Door_Open_Handler)
         print("Door open limit switch value is -- %i" % LS_door_open_state)
+        
 
 # Create Closed Limit Switch Handler for both falling and rising
-Limit_Switch_Closed.irq(trigger=machine.Pin.IRQ_FALLING | machine.Pin.IRQ_RISING, handler = Door_Closed_Handler)
+# Limit_Switch_Closed.irq(trigger=machine.Pin.IRQ_FALLING | machine.Pin.IRQ_RISING, handler = Door_Closed_Handler)
+Limit_Switch_Closed.irq(trigger=machine.Pin.IRQ_FALLING, handler = Door_Closed_Handler)
 
 # Create Open Limit Switch Handler for both falling and rising
-Limit_Switch_Open.irq(trigger=machine.Pin.IRQ_FALLING | machine.Pin.IRQ_RISING, handler = Door_Open_Handler)
+# Limit_Switch_Open.irq(trigger=machine.Pin.IRQ_FALLING | machine.Pin.IRQ_RISING, handler = Door_Open_Handler)
+Limit_Switch_Open.irq(trigger=machine.Pin.IRQ_FALLING, handler = Door_Open_Handler)
 
 # Turn the motor off
 def MotorOff(sending_func):
@@ -184,6 +179,8 @@ def move_door(desired_state):
         print("Motor on: opening")
         time.sleep(3)
         set_neopixel_color("green")
+        #Turn off closed limit switch handler to prevent throwing an interrupt from the closed limit switch when it is opened while the door is moving
+        Limit_Switch_Closed.irq(handler=None)
         Relay_A.value(1)
         Relay_B.value(0)
         #Wait for door to finish
@@ -198,6 +195,8 @@ def move_door(desired_state):
     elif desired_state == "Closed":
         print("Motor on: closing")
         time.sleep(3)
+        #Turn off open limit switch handler to prevent throwing an interrupt from the open limit switch when it is opened while the door is moving
+        Limit_Switch_Open.irq(handler=None)
         Relay_A.value(0)
         Relay_B.value(1)
         set_neopixel_color("red")
@@ -217,11 +216,13 @@ def move_door(desired_state):
         
     print("Door move complete! Door is now %s" % desired_state)
     if desired_state == "Open":
+        Limit_Switch_Closed.irq(handler=Door_Closed_Handler)
         LS_door_closed_state = 0
         set_neopixel_color("blue")
         time.sleep(2)
         set_neopixel_color("green")
     else:
+        Limit_Switch_Open.irq(handler=Door_Open_Handler)
         LS_door_open_state = 0
         set_neopixel_color("blue")
         time.sleep(2)
