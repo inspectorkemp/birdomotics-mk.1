@@ -216,12 +216,14 @@ def move_door(desired_state):
         
     print("Door move complete! Door is now %s" % desired_state)
     if desired_state == "Open":
+        # Turn the handler back on now that door moving is complete.
         Limit_Switch_Closed.irq(handler=Door_Closed_Handler)
         LS_door_closed_state = 0
         set_neopixel_color("blue")
         time.sleep(2)
         set_neopixel_color("green")
     else:
+        # Turn the handler back on now that door moving is complete.
         Limit_Switch_Open.irq(handler=Door_Open_Handler)
         LS_door_open_state = 0
         set_neopixel_color("blue")
