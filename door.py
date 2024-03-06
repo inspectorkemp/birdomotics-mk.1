@@ -231,7 +231,7 @@ def move_door(desired_state):
         set_neopixel_color("red")
         
     #Update the door state on MQTT
-    # client.publish(MQTT_TOPIC_REQUEST, desired_state)
+    client.publish("from_the_door", desired_state)
 
 # Set MQTT callbacks
 client.set_callback(on_message)
