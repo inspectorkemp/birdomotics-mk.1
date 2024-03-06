@@ -1,13 +1,13 @@
 # birdomotics-mk.1
 To-Do list: in somewhat priority order
 
-Troubleshoot issue where door open routine is not clearly caught.
+~~Troubleshoot issue where door open routine is not clearly caught.~~
 
-Publish MQTT messages during and post door state changes.
+~~Publish MQTT messages during and post door state changes.~~
 
-Create .yaml files for Home Assistant integration.
+(BN) Create .yaml files for Home Assistant integration.
 
-Configure a way to query door position switches *only* via MQTT subscribe and then publish the results.
+(MF) Configure a way to query door position switches *only* via MQTT subscribe and then publish the results.
 
 
 ## Requirements
