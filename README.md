@@ -7,7 +7,7 @@ To-Do list: in somewhat priority order
 
 (BN) Create .yaml files for Home Assistant integration.
 
-(MF) Configure a way to query door position switches *only* via MQTT subscribe and then publish the results.
+~~(MF) Configure a way to query door position switches *only* via MQTT subscribe and then publish the results.~~
 
 
 ## Requirements
