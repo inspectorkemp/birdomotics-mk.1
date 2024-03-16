@@ -13,6 +13,7 @@ MQTT_USERNAME = secrets.MQTT_USERNAME
 MQTT_PASSWORD = secrets.MQTT_PASSWORD
 MQTT_TOPIC_REQUEST = secrets.MQTT_TOPIC_REQUEST
 
+
 # NeoPixel configuration
 num_pixels = 1  # Number of NeoPixels
 neo_pin = 13    # Pin connected to the NeoPixel
@@ -155,6 +156,10 @@ def on_message(topic, msg):
         current_door_state = "Unknown"
         print("Both limit switchs are open -- door in unknown state")
     
+    # Only check the current door state
+    if new_desired_state == "door_check":
+        door_state_msg = "I checked the limit switches and the door is currently: %s" % current_door_state
+        client.publish("from_the_door",door_state_msg)
     # Check if door is in the desired state already - if yes, don't do anything.
     if new_desired_state == current_door_state:
         print("Door is already in desired state %s" % current_door_state)
@@ -162,7 +167,8 @@ def on_message(topic, msg):
             set_neopixel_color("red")
         elif current_door_state == "Open":
             set_neopixel_color("green")
-    else:
+    # Complicated IF statement - only move the door if the state is not equal to current and door_check was not submitted to the topic
+    elif new_desired_state != current_door_state and new_desired_state != "door_check":
         # Door is not in desired state, moving...
         move_door(new_desired_state)
 
@@ -250,5 +256,6 @@ try:
         
 finally:
     client.disconnect()
+
 
 
