@@ -4,6 +4,7 @@ import network
 import neopixel
 import secrets
 from machine import Pin, Timer
+from ahtx0 import AHT20
 
 # Define WiFi and MQTT details
 WIFI_SSID = secrets.WIFI_SSID
@@ -13,6 +14,13 @@ MQTT_USERNAME = secrets.MQTT_USERNAME
 MQTT_PASSWORD = secrets.MQTT_PASSWORD
 MQTT_TOPIC_REQUEST = secrets.MQTT_TOPIC_REQUEST
 
+# Initialize I2C Bus using GP2(SDA) GP3(CLK)
+aht20_sda_pin = 2
+aht20_scl_pin = 3
+i2c = I2C(0, sda=Pin(aht20_sda_pin), scl=Pin(aht20_scl_pin), freq=100000)
+
+# Initialize AHT20 Sensor
+aht20 = AHT20(i2c)
 
 # NeoPixel configuration
 num_pixels = 1  # Number of NeoPixels
