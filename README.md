@@ -5,9 +5,11 @@ To-Do list: in somewhat priority order
 
 ~~Publish MQTT messages during and post door state changes.~~
 
-(BN) Create .yaml files for Home Assistant integration.
+~~(BN) Create .yaml files for Home Assistant integration.~~
 
 ~~(MF) Configure a way to query door position switches *only* via MQTT subscribe and then publish the results.~~
+
+  (BN) Implement AHT20 temp/humidity sensor and publish MQTT message on X inteval
 
 
 ## Requirements
