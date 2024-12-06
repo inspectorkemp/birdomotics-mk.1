@@ -76,34 +76,27 @@ while not wifi.isconnected():
 # Initialize MQTT client
 client = MQTTClient("micropython_client", MQTT_BROKER, user=MQTT_USERNAME, password=MQTT_PASSWORD)
 
-# Possibly unused code - schedule for removal.
 def Get_Limit_Switch_Values():
     global LS_door_closed_state
     global LS_door_open_state
     LS_door_open_state = Limit_Switch_Open.value()
     LS_door_closed_state = Limit_Switch_Closed.value()
 
-
-def Turn_On_Handlers():
-    Limit_Switch_Closed.irq(handler=Door_Closed_Handler)
-    Limit_Switch_Open.irq(handler=Door_Open_Handler)
-
-
 # DoorClosing.py
 def Door_Closed_Handler(pin):
     global LS_door_closed_state
     global LS_door_open_state
     # If the closed door limit switch is closed, then update the limit switch states and turn off the motor.
-    if (Limit_Switch_Open.value() == 1):
+    if (Limit_Switch_Open.value()==1):
         # Turn off handler to prevent re-introduce multiple interrupts while running
-        Limit_Switch_Open.irq(handler=None)
+        Limit_Switch_Closed.irq(handler=None)
         # Update global variables with current state of limit switches
         LS_door_closed_state = Limit_Switch_Closed.value()
         LS_door_open_state = Limit_Switch_Open.value()
         # Motor gets turned off
         MotorOff("Door_Closed_Handler")
-        # Turn the interrupt handlers back on
-        Turn_On_Handlers()
+        # Turn the interrupt back on
+        Limit_Switch_Closed.irq(handler=Door_Closed_Handler)
         print("Door closed limit switch value is -- %i" % LS_door_closed_state)
     
     
@@ -112,32 +105,27 @@ def Door_Open_Handler(pin):
     global LS_door_open_state
     global LS_door_closed_state
     # If the open door limit switch is closed, then update the limit switch states and turn off the motor.
-    if (Limit_Switch_Closed.value() == 1):
+    if (Limit_Switch_Closed.value()==1):
         # Turn off handler to prevent re-introduce multiple interrupts while running
-        Limit_Switch_Closed.irq(handler=None)
+        # Limit_Switch_Open.irq(handler=None)
        # Update global variables with current state of limit switches
         LS_door_open_state = Limit_Switch_Open.value()
         LS_door_closed_state = Limit_Switch_Closed.value()
         # Motor gets turned off
         MotorOff("Door_Open_Handler")
-        # Turn the interrupt handlers back on
-        Turn_On_Handlers()
+        # Turn the interrupt back on
+        Limit_Switch_Open.irq(handler=Door_Open_Handler)
         print("Door open limit switch value is -- %i" % LS_door_open_state)
         
 
 # Create Closed Limit Switch Handler for both falling and rising
 # Limit_Switch_Closed.irq(trigger=machine.Pin.IRQ_FALLING | machine.Pin.IRQ_RISING, handler = Door_Closed_Handler)
-# Limit_Switch_Closed.irq(trigger=machine.Pin.IRQ_FALLING, handler = Door_Closed_Handler)
-
-# Handler to detect when the closed switch is open which represents the door itself is OPEN and in an UP position
-Limit_Switch_Closed.irq(trigger=machine.Pin.IRQ_RISING, handler = Door_Open_Handler)
+Limit_Switch_Closed.irq(trigger=machine.Pin.IRQ_FALLING, handler = Door_Closed_Handler)
 
 # Create Open Limit Switch Handler for both falling and rising
 # Limit_Switch_Open.irq(trigger=machine.Pin.IRQ_FALLING | machine.Pin.IRQ_RISING, handler = Door_Open_Handler)
-# Limit_Switch_Open.irq(trigger=machine.Pin.IRQ_FALLING, handler = Door_Open_Handler)
 
-# Handler to detect when the open limit switch is open which represents the door itself is CLOSED and in a DOWN position
-Limit_Switch_Open.irq(trigger=machine.Pin.IRQ_RISING, handler = Door_Closed_Handler)
+Limit_Switch_Open.irq(trigger=machine.Pin.IRQ_FALLING, handler = Door_Open_Handler)
 
 # Turn the motor off
 def MotorOff(sending_func):
@@ -156,19 +144,18 @@ def on_message(topic, msg):
     print("New Desired State Message Received %s" % new_desired_state)
     
     # Check limit switches for door state 
-    if Limit_Switch_Closed.value() == 0 and Limit_Switch_Open.value() == 1:
+    if Limit_Switch_Closed.value() == 0:
         print("Limit switches polled - door is currently Closed")
         current_door_state = "Closed"
-    elif Limit_Switch_Closed.value() == 1 and Limit_Switch_Open.value() == 0:
+    elif Limit_Switch_Open.value() == 0:
         current_door_state = "Open"
         print("Limit switches polled - door is currently Open")
     elif Limit_Switch_Closed.value() == 0 and Limit_Switch_Open.value() == 0:
         current_door_state = "Unknown"
         print("Both limit switchs are open -- door in unknown state")
-    # Commenting this out as both switches will be closed while door is transitioning
-    # elif Limit_Switch_Closed.value() == 1 and Limit_Switch_Open.value() == 1:
-    #     current_door_state = "Unknown"
-    #     print("Both limit switchs are open -- door in unknown state")
+    elif Limit_Switch_Closed.value() == 1 and Limit_Switch_Open.value() == 1:
+        current_door_state = "Unknown"
+        print("Both limit switchs are open -- door in unknown state")
     
     # Only check the current door state
     if new_desired_state == "door_check":
@@ -207,14 +194,14 @@ def move_door(desired_state):
         try:
             # While the closed limit switch is closed
             while Limit_Switch_Closed.value() == 0:    
-                print("Waiting for interrupt request from door open limit switch...")
-                time.sleep(3)
+                print("Waiting for closed switch to open...")
+                # time.sleep(1)
         except Exception as e:
             MotorOff("move_door open exception")
             print(e)
     elif desired_state == "Closed":
         print("Motor on: closing")
-        # time.sleep(3)
+        # time.sleep(1)
         #Turn off open limit switch handler to prevent throwing an interrupt from the open limit switch when it is opened while the door is moving
         Limit_Switch_Closed.irq(handler=None)
         Relay_A.value(0)
@@ -222,10 +209,10 @@ def move_door(desired_state):
         set_neopixel_color("red")
         #Wait for door to finish
         try:
-            # While the open limit switch open
+            # While the open limit switch closed
             while Limit_Switch_Open.value() == 0:    
-                print("Waiting for interrupt request from door closed limit switch...")
-                time.sleep(3)
+                print("Waiting on door open switch to open")
+                # time.sleep(1)
         except Exception as e:
             MotorOff("move_door closed exception")
             print(e)
@@ -237,15 +224,15 @@ def move_door(desired_state):
     print("Door move complete! Door is now %s" % desired_state)
     if desired_state == "Open":
         # Turn the handler back on now that door moving is complete.
-        Limit_Switch_Open.irq(handler=Door_Open_Handler)
-        LS_door_closed_state = Limit_Switch_Closed.value()
+        Limit_Switch_Closed.irq(handler=Door_Closed_Handler)
+        LS_door_open_state = 0
         set_neopixel_color("blue")
         time.sleep(2)
         set_neopixel_color("green")
     else:
         # Turn the handler back on now that door moving is complete.
-        Limit_Switch_Closed.irq(handler=Door_Closed_Handler)
-        LS_door_open_state = Limit_Switch_Open.value()
+        Limit_Switch_Open.irq(handler=Door_Open_Handler)
+        LS_door_closed_state = 0
         set_neopixel_color("blue")
         time.sleep(2)
         set_neopixel_color("red")
@@ -270,5 +257,7 @@ try:
         
 finally:
     client.disconnect()
+
+
 
 
