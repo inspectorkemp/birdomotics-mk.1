@@ -85,8 +85,9 @@ def Get_Limit_Switch_Values():
 
 
 def Turn_On_Handlers():
-    Limit_Switch_Closed.irq(handler=Door_Closed_Handler)
-    Limit_Switch_Open.irq(handler=Door_Open_Handler)
+    Limit_Switch_Closed.irq(handler=Door_Open_Handler)
+    Limit_Switch_Open.irq(handler=Door_Closed_Handler)
+#    print("Turn_On_Handler function hit - handlers are back on! %s" % Limit_Switch_Closed)
 
 
 # DoorClosing.py
@@ -208,7 +209,7 @@ def move_door(desired_state):
             # While the closed limit switch is closed
             while Limit_Switch_Closed.value() == 0:    
                 print("Waiting for interrupt request from door open limit switch...")
-                time.sleep(3)
+                time.sleep(1)
         except Exception as e:
             MotorOff("move_door open exception")
             print(e)
@@ -225,7 +226,7 @@ def move_door(desired_state):
             # While the open limit switch open
             while Limit_Switch_Open.value() == 0:    
                 print("Waiting for interrupt request from door closed limit switch...")
-                time.sleep(3)
+                time.sleep(1)
         except Exception as e:
             MotorOff("move_door closed exception")
             print(e)
@@ -237,14 +238,14 @@ def move_door(desired_state):
     print("Door move complete! Door is now %s" % desired_state)
     if desired_state == "Open":
         # Turn the handler back on now that door moving is complete.
-        Limit_Switch_Open.irq(handler=Door_Open_Handler)
+        Limit_Switch_Open.irq(handler=Door_Closed_Handler)
         LS_door_closed_state = Limit_Switch_Closed.value()
         set_neopixel_color("blue")
         time.sleep(2)
         set_neopixel_color("green")
     else:
         # Turn the handler back on now that door moving is complete.
-        Limit_Switch_Closed.irq(handler=Door_Closed_Handler)
+        Limit_Switch_Closed.irq(handler=Door_Open_Handler)
         LS_door_open_state = Limit_Switch_Open.value()
         set_neopixel_color("blue")
         time.sleep(2)
