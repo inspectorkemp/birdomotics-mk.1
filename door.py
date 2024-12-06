@@ -94,7 +94,7 @@ def Turn_On_Handlers():
 def Door_Closed_Handler(pin):
     global LS_door_closed_state
     global LS_door_open_state
-    # If the closed door limit switch is closed, then update the limit switch states and turn off the motor.
+    # If the open door limit switch is open, then update the limit switch states and turn off the motor.
     if (Limit_Switch_Open.value() == 1):
         # Turn off handler to prevent re-introduce multiple interrupts while running
         Limit_Switch_Open.irq(handler=None)
@@ -112,7 +112,7 @@ def Door_Closed_Handler(pin):
 def Door_Open_Handler(pin):
     global LS_door_open_state
     global LS_door_closed_state
-    # If the open door limit switch is closed, then update the limit switch states and turn off the motor.
+    # If the closed door limit switch is open, then update the limit switch states and turn off the motor.
     if (Limit_Switch_Closed.value() == 1):
         # Turn off handler to prevent re-introduce multiple interrupts while running
         Limit_Switch_Closed.irq(handler=None)
