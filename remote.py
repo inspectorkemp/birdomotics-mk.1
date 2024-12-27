@@ -4,6 +4,7 @@ import network
 import neopixel
 import secrets
 from machine import Pin, Timer
+from pico_i2c_lcd import I2cLcd # Library for LCD control
 
 # WiFi and MQTT details from secrets module
 WIFI_SSID = secrets.WIFI_SSID
@@ -34,6 +35,17 @@ def set_neopixel_color(color):
     else:
         np[0] = (0, 0, 0)    # Off
     np.write()
+    
+# I2C configuration for 1602A LCD SCL=PIN5 SDA=PIN4
+i2c = I2C(0, scl=Pin(5), sda=Pin(4), freq=400000)
+lcd = I2cLcd(i2c, 0x27, 2, 16)  # Adjust the I2C address (0x27 or 0x3F)
+
+# Function to display door state on LCD
+def display_state_on_lcd(state):
+    lcd.clear()
+    lcd.putstr("Door State:")
+    lcd.move_to(0, 1)
+    lcd.putstr(state)
 
 # Connect to WiFi
 def connect_wifi():
@@ -47,14 +59,18 @@ def connect_wifi():
 
 # MQTT message callback
 def on_message(topic, msg):
-    print("Received message on topic {}: {}".format(topic, msg))
-    if msg == b"Open":
+    global current_state
+    state = msg.decode("utf-8")
+    print(f"Received state: {state}")
+    current_state = state
+    if state == "Open":
         set_neopixel_color("green")
-    elif msg == b"Closed":
+    elif state == "Closed":
         set_neopixel_color("blue")
     else:
         set_neopixel_color("off")
-
+    display_state_on_lcd(state)
+    
 # Button press interrupt callbacks
 def open_button_pressed(pin):
     print("Open button pressed!")
@@ -82,8 +98,9 @@ def main():
     button_open.irq(trigger=Pin.IRQ_FALLING, handler=open_button_pressed)
     button_close.irq(trigger=Pin.IRQ_FALLING, handler=close_button_pressed)
 
-    # Default NeoPixel state
-    set_neopixel_color("blue")  # Assume door is closed initially
+    # Display and pixel initial states
+    display_state_on_lcd("Connecting...")
+    set_neopixel_color("off")
 
     # Main loop to process MQTT messages
     try:
